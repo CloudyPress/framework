@@ -1,0 +1,22 @@
+{
+  "name": "mcris112/cloudypress",
+  "description": "Laravel-style routing + ORM for WordPress plugins",
+  "type": "library",
+  "version": "0.0.0.1",
+  "autoload": {
+    "psr-4": {
+      "CloudyPress\\Core\\": "src/",
+      "CloudyPress\\Database\\": "database/"
+    },
+    "files": [
+      "src/helpers.php"
+    ]
+  },
+  "require": {
+    "php": ">=8.0",
+    "ext-mysqli": "*"
+  },
+  "require-dev": {
+    "symfony/var-dumper": "^7.3"
+  }
+}
