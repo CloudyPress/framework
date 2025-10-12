@@ -110,13 +110,24 @@ class QueryBuilder
             ! in_array($operator, ['=', '<>', '!=']);
     }
 
-    public function execute()
+    public function get()
     {
-        return Sql::run( $this->grammar->compile($this), $this->grammar->getParams() );
+        return Sql::run( $this->grammar->compile($this), $this->grammar->getParams() );;
     }
 
     public function toSQL()
     {
         return $this->grammar->compile($this);
     }
+
+
+    // ---------------------------------------------------------------------
+    // 🔍 Relations
+    // ---------------------------------------------------------------------
+
+
+
+
+
+
 }

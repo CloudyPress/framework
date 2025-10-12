@@ -100,7 +100,10 @@ class Router
             {
                 register_rest_route( $this->getNamespaceFrom($group, $version), $route->getUri(), array(
                     'methods' => $route->getMethods(),
-                    'callback' => fn(WP_REST_Request  $request) => $route->getAction( ...$request->get_params() )
+                    'callback' => function(WP_REST_Request  $request) use ($route) {
+                        header("Content-Type: text/html");
+                        $route->getAction( ...$request->get_params() );
+                    }
                 ) );
             }
         });
