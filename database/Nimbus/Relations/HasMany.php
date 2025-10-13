@@ -47,7 +47,7 @@ class HasMany extends Relation
     {
         if ( count($results) <= 0)
         {
-            return $results;
+            return [];
         }
 
         /** @var Model $model */

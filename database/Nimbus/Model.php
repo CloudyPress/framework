@@ -62,11 +62,19 @@ abstract class Model implements \JsonSerializable
             return static::query()->{$name}(...$arguments);
         }
 
+        $model = new static();
+
+        $query = $model->callScope($name, $arguments);
+
+        if ( $query )
+            return $query;
+
         return null;
     }
 
 
-    public static function query(){
+    public static function query(): Builder
+    {
         return (new static())->newQuery()->setModel( new static() );
     }
 
@@ -155,5 +163,22 @@ abstract class Model implements \JsonSerializable
         }
 
         return null;
+    }
+
+    public function callScope(string $name, mixed $scopeArgs, $query = null): Builder|null
+    {
+        $scoped = 'scope' . ucfirst($name);
+
+        if (! method_exists($this, $scoped)) {
+            return null;
+        }
+
+        if ( is_null($query) )
+            $query = $this->newQuery();
+
+        // Call the scope and capture query
+        $this->{$scoped}($query, ...$scopeArgs);
+
+        return $query;
     }
 }

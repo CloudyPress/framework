@@ -31,6 +31,14 @@ Make sure your plugin’s composer.json has autoloading enabled and that you run
 - WordPress 6.x+
 - MySQL/MariaDB with mysxqli extension
 
+---
+
+## 📖 Documentation
+
+Looking for guides, API references, and examples?  
+You’ll find the full documentation here:
+
+👉 [CloudyPress Documentation](https://github.com/CloudyPress/docs)
 
 ## 📜 License
 2025 - CloudyPress is open‑source software licensed under the  

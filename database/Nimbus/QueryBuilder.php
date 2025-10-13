@@ -123,7 +123,7 @@ class QueryBuilder implements Queryable
     }
 
 
-    protected function prepareValueAndOperator( $operator, $value, bool $useDefault)
+    protected function prepareValueAndOperator( $value, $operator, bool $useDefault)
     {
         if ( $useDefault )
         {
