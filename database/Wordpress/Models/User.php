@@ -19,6 +19,6 @@ class User extends Model
 
     public function meta()
     {
-        return $this->hasMany( UserMeta::class );
+        return $this->hasMany( UserMeta::class, 'user_id' );
     }
 }

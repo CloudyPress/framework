@@ -33,7 +33,14 @@ class HasMany extends Relation
      */
     public function applyFilterByParents(array $models)
     {
+        $ids = [];
+        foreach ($models as $model) {
+            $ids[] = $model->{$this->localKey};
+        }
 
+        $this->query->whereIn($this->foreignKey, $ids);
+
+        //dd($ids, $this->query->toSql(), $this->query->getBindings() );
     }
 
     public function matchWithParents(array $models, $results, $name): array
@@ -47,12 +54,26 @@ class HasMany extends Relation
         foreach ($models as $model) {
             /** @var Model $value */
             $data = array_filter( $results, function ( $value ) use ( $model, $name ) {
-                return $model->{$this->localKey} == $value->{$this->foreignKey};
+                return $model->{$this->localKey} == $value->{$this->getCleanForeignKey()};
             } );
 
             $model->setRelation( $name, $data );
         }
 
+
         return $models;
+    }
+
+    /**
+     * The foreignkey passed, is like: "table_name.column_name"
+     * so whe need to clean it and get only "column_name" to
+     * actually sync with the parent
+     * @return string
+     */
+    protected function getCleanForeignKey(): string
+    {
+        $val = explode(".", $this->foreignKey);
+
+        return end($val);
     }
 }

@@ -28,6 +28,7 @@ class Sql
             $sql
         );
 
+
         // Prepare
         $stmt = $mysqli->prepare($sqlWithQuestionMarks);
         if ($stmt === false) {

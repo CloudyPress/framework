@@ -21,6 +21,11 @@ class Grammar
         return $this->params;
     }
 
+    public function addParams(...$params): void
+    {
+        $this->params = array_merge($this->params, $params);
+    }
+
     public function compile(QueryBuilder $query): string
     {
         $columns = implode(", ", $query->getColumns());
@@ -44,23 +49,54 @@ class Grammar
     }
     public function compileWheres(QueryBuilder $query): string
     {
+        if (empty($query->wheres)) {
+            return '';
+        }
+        $first = true;
+
         $processed = [];
 
         foreach ( $query->wheres as $where) {
             extract($where);
 
-            // Simulate PDO, we need to create an id
-            $id = uniqid("where_");
-            $this->params[$id] = $value;
 
-            $processed[] = "{$boolean} WHERE {$column} {$operator} :{$id}";
+            $prefix = $first ? 'WHERE' : strtoupper($boolean);
+            $first = false;
+
+                // Simulate PDO, we need to create an id
+            if ($type === "Expression") {
+                $id = uniqid("where_");
+                $this->params[$id] = $value;
+                $processed[] = "{$prefix} {$column} {$operator} :{$id}";
+            }
+
+            if ($type === "IN") {
+                // Subquery case
+                if (isset($values[0]) && $values[0] instanceof Expression) {
+                    $processed[] = "{$prefix} {$column} IN ({$values[0]->getValue()})";
+                    continue;
+                }
+
+                // Flat array of values
+                $placeholders = [];
+                foreach ($values as $val) {
+                    $id = uniqid("wherein_");
+                    $this->params[$id] = $val;
+                    $placeholders[] = ":{$id}";
+                }
+
+                $processed[] = "{$prefix} {$column} IN (" . implode(', ', $placeholders) . ")";
+            }
         }
 
-        return $this->removeLeadingBooleans( implode(" ", $processed) );
+        return implode(" ", $processed);
+        //return $this->removeLeadingBooleans( implode(" ", $processed) );
     }
 
+    /*
     protected function removeLeadingBooleans( string $value ): string
     {
         return preg_replace('/and |or /i', '', $value, 1);
     }
+    */
 }

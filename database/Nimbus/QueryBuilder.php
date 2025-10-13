@@ -2,14 +2,17 @@
 
 namespace CloudyPress\Database\Nimbus;
 
+use Closure;
+use CloudyPress\Database\Query\Expression;
 use CloudyPress\Database\Query\Grammar;
+use CloudyPress\Database\Query\Queryable;
 use CloudyPress\Database\Query\Sql;
 use InvalidArgumentException;
 
 /**
  * Class for only query managements
  */
-class QueryBuilder
+class QueryBuilder implements Queryable
 {
     public array $wheres = [];
 
@@ -24,6 +27,16 @@ class QueryBuilder
     )
     {
         $this->grammar = $grammar ?? new Grammar();
+    }
+
+    /**
+     * If what to start a new query from beggining
+     * like sub queries
+     * @return $this
+     */
+    public function newQuery()
+    {
+        return new static($this->grammar);
     }
 
     /**
@@ -51,6 +64,9 @@ class QueryBuilder
     {
         return $this->columns;
     }
+
+
+
 
     public function select(array $columns): QueryBuilder
     {
@@ -83,7 +99,31 @@ class QueryBuilder
         return $this->where($column, $operator, $value, 'OR');
     }
 
-    protected function prepareValueAndOperator( $value, $operator, bool $useDefault)
+    public function whereIn(string $column, Queryable|Closure|array $values , $boolean = "AND", $isNot = false){
+        $type = $isNot ? 'NotIn' : 'IN';
+
+        /*
+         * If in case pass a param like:
+         * ->whereIn("column", User::select(..)->.... )
+         * So can use that query and put it inside condition
+         */
+        if( $this->isQueriable($values) )
+        {
+            [$query, $bindings] = $this->createSub($values);
+
+            $values = [new Expression($query)];
+
+            //add bindings
+            $this->grammar->addParams( ...$bindings );
+        }
+
+        $this->wheres[] = compact( 'type', 'column', 'values', 'boolean');
+
+        return $this;
+    }
+
+
+    protected function prepareValueAndOperator( $operator, $value, bool $useDefault)
     {
         if ( $useDefault )
         {
@@ -115,19 +155,46 @@ class QueryBuilder
         return Sql::run( $this->grammar->compile($this), $this->grammar->getParams() );;
     }
 
-    public function toSQL()
+    public function toSQL(): string
     {
         return $this->grammar->compile($this);
     }
 
+    public function getBindings(): array
+    {
+        return $this->grammar->getParams();
+    }
 
     // ---------------------------------------------------------------------
     // 🔍 Relations
     // ---------------------------------------------------------------------
 
 
+    /**
+     * Create a fresh sub query that we can use in certain functions
+     * @param Queryable|Closure $query
+     * @return array<string, array<string[]> > [Sql string, Bindings to SQL]
+     */
+    public function createSub(Queryable|Closure $query): array
+    {
+        // If the given query is a Closure, we will execute it while passing in a new
+        // query instance to the Closure. This will give the developer a chance to
+        // format and work with the query before we cast it to a raw SQL string.
+        if ( $query instanceof Closure )
+        {
+            $callback = $query;
+            $query = $this->newQuery();
 
+            $callback($query);
+        }
 
+        return [ $query->toSQL(), $query->getBindings() ];
+    }
 
+    public function isQueriable($value)
+    {
+        return $value instanceof Queryable
+            || $value instanceof Closure;
+    }
 
 }

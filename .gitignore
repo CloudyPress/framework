@@ -1,0 +1,13 @@
+# Composer dependencies
+/vendor/
+composer.lock
+
+# IDE & Editor settings
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific files
+.DS_Store
+Thumbs.db

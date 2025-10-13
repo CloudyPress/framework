@@ -1,8 +1,22 @@
 {
-  "name": "mcris112/cloudypress",
-  "description": "Laravel-style routing + ORM for WordPress plugins",
+  "name": "cloudypress/framework",
+  "description": "Framework for building WordPress plugins with developer-friendly API routes and database ORM support",
   "type": "library",
-  "version": "0.0.0.1",
+  "version": "0.1.0",
+  "license": "GPL-2.0-or-later",
+  "keywords": [
+    "wordpress",
+    "plugin",
+    "framework",
+    "orm",
+    "database",
+    "query-builder",
+    "routing",
+    "api",
+    "rest",
+    "developer-friendly",
+    "cloudypress"
+  ],
   "autoload": {
     "psr-4": {
       "CloudyPress\\Core\\": "src/",

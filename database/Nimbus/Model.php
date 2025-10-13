@@ -34,7 +34,8 @@ abstract class Model implements \JsonSerializable
 
     public function getTableName(): string
     {
-        return $this->tableName;
+        global $wpdb;
+        return $wpdb->base_prefix.($this->tableName ?? Str::snake( class_basename($this) ) );
     }
 
     public function getKeyName()
@@ -60,6 +61,8 @@ abstract class Model implements \JsonSerializable
         if ( method_exists( static::$builder, $name) ) {
             return static::query()->{$name}(...$arguments);
         }
+
+        return null;
     }
 
 
@@ -102,12 +105,6 @@ abstract class Model implements \JsonSerializable
     }
 
 
-
-    public function getTable()
-    {
-        return $this->table ?? Str::snake( class_basename($this) );
-    }
-
     public function getForeignKey()
     {
         return Str::snake(  class_basename($this)).'_'.$this->getKeyName();
@@ -124,7 +121,7 @@ abstract class Model implements \JsonSerializable
             return $column;
         }
 
-        return $this->getTable().'.'.$column;
+        return $this->getTableName().'.'.$column;
     }
 
 
@@ -152,9 +149,11 @@ abstract class Model implements \JsonSerializable
 
     public function __get(string $name)
     {
-        if ( in_array($name, $this->attributes) )
+        if ( isset($this->attributes[$name]) )
         {
             return $this->attributes[$name];
         }
+
+        return null;
     }
 }

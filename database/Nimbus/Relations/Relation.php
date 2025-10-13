@@ -4,8 +4,9 @@ namespace CloudyPress\Database\Nimbus\Relations;
 
 use CloudyPress\Database\Nimbus\Builder;
 use CloudyPress\Database\Nimbus\Model;
+use CloudyPress\Database\Query\Queryable;
 
-abstract class Relation
+abstract class Relation implements Queryable
 {
 
     protected bool $eagerKeysWereEmpty = false;
@@ -17,6 +18,15 @@ abstract class Relation
         protected Model $parent
     )
     {
+    }
+
+    public function __call($method, $parameters)
+    {
+        if (method_exists($this->query, $method)) {
+            return $this->query->$method(...$parameters);
+        }
+
+        throw new \BadMethodCallException("Method {$method} does not exist on Relation or QueryBuilder.");
     }
 
     abstract public function initRelation(array $models, string $relation): array;
@@ -50,4 +60,14 @@ abstract class Relation
     }
 
     abstract public function matchWithParents( array $models, $results, $name ): array;
+
+    public function toSql(): string
+    {
+        return $this->query->toSql();
+    }
+
+    public function getBindings(): array
+    {
+        return $this->query->getBindings();
+    }
 }

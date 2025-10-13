@@ -3,9 +3,10 @@
 namespace CloudyPress\Database\Nimbus;
 
 use CloudyPress\Database\Nimbus\Relations\Relation;
+use CloudyPress\Database\Query\Queryable;
 use PDO;
 
-class Builder
+class Builder implements Queryable
 {
     // ---------------------------------------------------------------------
     // 🔧 Properties & Constructor
@@ -39,14 +40,23 @@ class Builder
 
     public function getTableName(): string
     {
-        global $wpdb;
-        return $wpdb->base_prefix.$this->model->getTableName();
+        return $this->model->getTableName();
     }
 
 
     // ---------------------------------------------------------------------
     // 📥 Retrieval
     // ---------------------------------------------------------------------
+
+    public function toSql(): string
+    {
+        return $this->query->toSql();
+    }
+
+    public function getBindings(): array
+    {
+        return $this->query->getBindings();
+    }
 
     public function get(): array
     {
@@ -97,6 +107,12 @@ class Builder
     {
         $this->query->where( $this->model->getKeyName(), $value );
 
+        return $this;
+    }
+
+    public function whereIn(string $column, Queryable|\Closure|array $values): Builder
+    {
+        $this->query->whereIn( $column, $values );
         return $this;
     }
 
@@ -270,9 +286,9 @@ class Builder
             }
         }
 
+
         return $results;
     }
-
     public function eagerLoadRelationToModel(array $models): array
     {
         foreach ($this->eagerLoad as $name => $constraint) {
