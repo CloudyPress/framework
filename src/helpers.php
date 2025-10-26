@@ -3,6 +3,14 @@
 if ( !function_exists( 'dd' ) ) {
     function dd( ...$args ) {
         dump( ...$args );
+
+        exit();
+    }
+}
+
+if ( !function_exists( 'dd_s' ) ) {
+    function dd_s( ...$args ) {
+        dump( ...$args );
     }
 }
 

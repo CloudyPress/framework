@@ -5,6 +5,8 @@ namespace CloudyPress\Database\Wordpress;
 use CloudyPress\Core\Support\Str;
 use CloudyPress\Database\Nimbus\Builder;
 use CloudyPress\Database\Nimbus\Model;
+use CloudyPress\Database\Wordpress\Models\WpPostMeta;
+use CloudyPress\Database\Wordpress\Relations\HasPostMeta;
 
 /**
  * @method static Builder publish()
@@ -68,5 +70,13 @@ abstract class PostType extends Model
     public function scopePending($query)
     {
         return $query->where("post_status", "pending");
+    }
+
+    public function meta()
+    {
+        return new HasPostMeta(
+            WpPostMeta::query(),
+            $this
+        );
     }
 }

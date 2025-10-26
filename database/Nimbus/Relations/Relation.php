@@ -23,7 +23,11 @@ abstract class Relation implements Queryable
     public function __call($method, $parameters)
     {
         if (method_exists($this->query, $method)) {
-            return $this->query->$method(...$parameters);
+            /*
+             * In case wants to call a custom queryBuilder, so just call it and then return same relation
+             * */
+            $this->query->$method(...$parameters);
+            return $this;
         }
 
         throw new \BadMethodCallException("Method {$method} does not exist on Relation or QueryBuilder.");

@@ -6,8 +6,9 @@ use CloudyPress\Core\Support\Str;
 use CloudyPress\Database\Nimbus\Relations\HasMany;
 
 /**
-     * @method static Builder where($column, $operator = null, $value = null)
-     * @method static Builder with( ...$relations )
+ * @method static Builder where($column, $operator = null, $value = null)
+ * @method static Builder with( ...$relations )
+ * @method static paginate(int $page = 1, int $perPage = 15, array|string $columns = '*') Paginate the results
  */
 abstract class Model implements \JsonSerializable
 {
@@ -41,6 +42,15 @@ abstract class Model implements \JsonSerializable
     public function getKeyName()
     {
         return $this->keyName;
+    }
+
+    /**
+     * Return the key value, like $post->ID, or the primary key set it
+     * @return mixed|null
+     */
+    public function getKey()
+    {
+        return $this->{$this->getKeyName()};
     }
 
 
@@ -160,6 +170,11 @@ abstract class Model implements \JsonSerializable
         if ( isset($this->attributes[$name]) )
         {
             return $this->attributes[$name];
+        }
+
+        if ( isset( $this->relations[$name] ) )
+        {
+            return $this->relations[$name];
         }
 
         return null;

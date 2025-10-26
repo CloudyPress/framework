@@ -6,7 +6,7 @@ use Closure;
 use CloudyPress\Database\Query\Expression;
 use CloudyPress\Database\Query\Grammar;
 use CloudyPress\Database\Query\Queryable;
-use CloudyPress\Database\Query\Sql;
+use CloudyPress\Database\Query\WPDB;
 use InvalidArgumentException;
 
 /**
@@ -16,11 +16,27 @@ class QueryBuilder implements Queryable
 {
     public array $wheres = [];
 
-    protected string $table = '';
+    public string $from;
 
-    protected array $columns = [];
+    /**
+     * By default get all columns
+     * @var array|string[]
+     */
+    public array $columns = ["*"];
 
     protected Grammar $grammar;
+
+    public ?int $limit = null;
+    public ?int $offset = null;
+
+    public array $joins = [];
+
+    /**
+     * Help to execute the functions:
+     * COUNT, SUM, AVG...
+     * @var array|null
+     */
+    public array|null $aggregate = null;
 
     public function __construct(
          Grammar|null $grammar = null
@@ -39,12 +55,19 @@ class QueryBuilder implements Queryable
         return new static($this->grammar);
     }
 
-    /**
-     * @param string $table
-     */
-    public function setTable(string $table): QueryBuilder
+//    /**
+//     * @param string $table
+//     */
+//    public function setTable(string $table): QueryBuilder
+//    {
+//        $this->table = $table;
+//
+//        return $this;
+//    }
+
+    public function from(string $table, string $as = null): self
     {
-        $this->table = $table;
+        $this->from = $as ? "{$table} as {$as}" : $table;
 
         return $this;
     }
@@ -54,7 +77,7 @@ class QueryBuilder implements Queryable
      */
     public function getTable(): string
     {
-        return $this->table;
+        return $this->from;
     }
 
     /**
@@ -66,14 +89,47 @@ class QueryBuilder implements Queryable
     }
 
 
-
-
-    public function select(array $columns): QueryBuilder
+    /**
+     * Limit rows of the Query
+     * @return int
+     */
+    public function getLimit(): int
     {
-        $this->columns = $columns;
+        return $this->limit;
+    }
+
+    /**
+     * @param string $function count, sum, avg....
+     * @param array|string $columns
+     * @return self
+     */
+    public function setAggregate(string $function, array|string $columns = "*"): self
+    {
+        $columns = is_array($columns) ? $columns : [$columns];
+
+        $this->aggregate = compact('function', 'columns');
         return $this;
     }
 
+    public function select(array|string $columns, bool $withParent = false): QueryBuilder
+    {
+        $this->columns = is_array($columns) ? $columns : func_get_args();
+
+        return $this;
+    }
+
+    public function offset(int $val)
+    {
+        $this->offset = $val;
+
+        return $this;
+    }
+
+    public function limit(int $limit): QueryBuilder
+    {
+        $this->limit = $limit;
+        return $this;
+    }
     public function where( string $column, string $operator = null, string $value = null, string $boolean = 'AND' )
     {
 
@@ -152,7 +208,7 @@ class QueryBuilder implements Queryable
 
     public function get()
     {
-        return Sql::run( $this->grammar->compile($this), $this->grammar->getParams() );;
+        return WPDB::run( $this->grammar->compile($this), $this->grammar->getParams() );;
     }
 
     public function toSQL(): string
@@ -197,4 +253,40 @@ class QueryBuilder implements Queryable
             || $value instanceof Closure;
     }
 
+    public function join(string $table, string $first, string $operator = null, string $second = null, $type = 'inner', $where = false)
+    {
+        $method = $where ? 'where' : 'on';
+        $this->joins[] = compact( 'table', 'first', 'operator', 'second', 'type', 'method');
+        return $this;
+    }
+
+
+    // ---------------------------------------------------------------------
+    // 🔍 PAGINATION FUNCTION
+    // ---------------------------------------------------------------------
+
+    public function getCountForPagination( array|string $columns ): int
+    {
+        $clone = $this->clone();
+
+
+        $result = $clone
+            ->setAggregate("count")
+            ->get();
+
+        if ( !isset($result[0]) )
+            return 0;
+
+        return $result[0]["aggregate"];
+    }
+
+    public function inPage(int $page, int $perPage)
+    {
+        return $this->offset( ($page-1)*$perPage )->limit($perPage);
+    }
+
+    public function clone()
+    {
+        return clone $this;
+    }
 }

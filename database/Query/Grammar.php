@@ -8,7 +8,13 @@ class Grammar
 {
 
     protected array $components = [
-        "wheres"
+        "columns",
+        "aggregate",
+        "from",
+        "joins",
+        "wheres",
+        "limit",
+        "offset"
     ];
 
     protected array $params = [];
@@ -28,11 +34,15 @@ class Grammar
 
     public function compile(QueryBuilder $query): string
     {
-        $columns = implode(", ", $query->getColumns());
+        if ( is_null($query->columns) || count($query->columns) == 0) {
+            $query->columns = ["*"];
+        }
 
         $compiled = $this->compileComponents($query);
 
-        return "SELECT {$columns} FROM {$query->getTable()} ".implode(" ", $compiled);
+        return trim(
+            implode(" ", array_filter( $compiled, fn($v) => !is_null($v)) )
+        );
     }
 
     protected function compileComponents(QueryBuilder $query)
@@ -42,11 +52,57 @@ class Grammar
         foreach ($this->components as $component) {
             $method = "compile".ucfirst($component);
 
-            $sql[] = $this->{$method}($query);
+            if ( !is_null($query->$component) )
+            {
+                $sql[] = $this->{$method}($query, $query->$component);
+            }
+
         }
 
         return $sql;
     }
+
+
+    public function compileColumns(QueryBuilder $query, array $columns): string|null
+    {
+        if ( !is_null($query->aggregate) ) {
+            return null;
+        }
+
+        return "SELECT ".implode(", ", $columns);
+    }
+
+    public function compileAggregate(QueryBuilder $query, array $aggregate): string|null
+    {
+        if ( is_null($aggregate) ) {
+            return null;
+        }
+
+        extract($aggregate);
+
+        return "SELECT ".strtoupper($function)."(".implode(",", $columns).") AS aggregate";
+    }
+
+
+    public function compileFrom(QueryBuilder $query, string $from): string
+    {
+        return "FROM {$from}";
+    }
+
+    public function compileJoins(QueryBuilder $query, array $joins): string
+    {
+        $sql = [];
+
+        foreach ($joins as $join) {
+            extract($join);
+
+            // string $table, string $first, string $operator = null, string $second = null, $type = 'inner', $method = "where° | "on"
+            $sql[] ="{$type} JOIN {$table} {$method} {$first} {$operator} {$second}";
+        }
+
+        return implode(" ", $sql);
+    }
+
     public function compileWheres(QueryBuilder $query): string
     {
         if (empty($query->wheres)) {
@@ -91,6 +147,17 @@ class Grammar
 
         return implode(" ", $processed);
         //return $this->removeLeadingBooleans( implode(" ", $processed) );
+    }
+
+    public function compileLimit(QueryBuilder $query, int $limit): string
+    {
+
+        return "LIMIT {$query->getLimit()}";
+    }
+
+    public function compileOffset(QueryBuilder $query, int $offset)
+    {
+        return "OFFSET {$offset}";
     }
 
     /*

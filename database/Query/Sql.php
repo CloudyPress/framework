@@ -5,7 +5,7 @@ namespace CloudyPress\Database\Query;
 use InvalidArgumentException;
 use RuntimeException;
 
-class Sql
+class Sql implements DBDriver
 {
 
     public static function run(string $sql, array $params = [] ): array
