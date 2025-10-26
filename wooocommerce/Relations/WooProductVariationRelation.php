@@ -24,7 +24,6 @@ class WooProductVariationRelation extends Relation
     {
         $ids = [];
 
-        dd( $models );
         /** @var Model $model */
         foreach ($models as $model) {
             $ids[] = $model->getKey();
@@ -40,7 +39,9 @@ class WooProductVariationRelation extends Relation
         foreach ($models as $model) {
             $model->setRelation(
                 $name,
-                array_filter( $results, fn($i) => $i->post_parent == $model->getKey())
+                array_values(
+                    array_filter( $results, fn($i) => $i->post_parent == $model->getKey())
+                )
             );
         }
 

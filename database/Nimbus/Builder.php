@@ -200,81 +200,20 @@ class Builder implements Queryable
     public function eagerLoadRelationToModel(array $models): array
     {
 
-        dd( $this->eagerLoad );
-        exit();
+
         //load all top-level models
-        foreach ($this->eagerLoad as $name => $constraint) {
-            // Load first relation on toplevel
-            if ( !str_contains($name, ".") )
-            {
-                $models = $this->eagerLoadRelation($models, $name, $constraint);
-            }
-        }
+        foreach ($this->eagerLoad as $name => $relation) {
+            // Load relation from top level to down
 
-        // Remove relation already loaded
-        $toLoad = array_filter(
-            $this->eagerLoad,
-            fn($constraint, $name) => str_contains($name, "."),
-            ARRAY_FILTER_USE_BOTH
-        );
-
-        $grouped = [];
-
-        foreach ( array_keys($toLoad) as $path) {
-            $parts = explode('.', $path);
-            $first = array_shift($parts);
-            $rest  = implode('.', $parts);
-
-            $grouped[$first][] = $rest;
-        }
-
-        dd( "grouped", $grouped );
-
-        // load sub level models
-        foreach ( $grouped as $parentRelation => $relations) {
-            // Split into array
-            $parts = explode('.', $name);
-
-            // the parent relation, that was previously loaded
-            $parent = $parts[0];
-            // Remove the first element
-            if ( count($parts) > 1 )
-            {
-                array_shift($parts);
-            }
-
-            // Rebuild into string
-            $name = implode('.', $parts);
-
-            if ( !str_contains($name, ".") )
-            {
-                $modelToEager = [];
-
-                foreach ($models as $model) {
-                    $rel = $model->{$relation};
-
-                    if ( !is_array($rel) )
-                    {
-                        $rel = [$rel];
-                    }
-
-                    $modelToEager = array_merge($modelToEager, $rel);
-                }
-
-                $this->eagerLoadRelation($modelToEager, $name, $constraint);
-            }
+            $models = WithRelation::eagerLoadRelation($this->model, $models, $name, $relation);
         }
 
         return $models;
     }
 
-    protected function eagerLoadRelationForNested(string $name, $models)
+    protected function eagerLoadRelation( array $models, string $name, WithRelation $withRelation)
     {
 
-    }
-
-    protected function eagerLoadRelation( array $models, string $name, \Closure $constraint)
-    {
         if (!method_exists($this->model, $name)) {
             throw new \RuntimeException("Relation {$name} does not exist on model");
         }
@@ -284,6 +223,7 @@ class Builder implements Queryable
 
         $relation->applyFilterByParents($models);
 
+        $constraint = $withRelation->getConstraints();
         $constraint($relation);
 
         return $relation->matchWithParents(

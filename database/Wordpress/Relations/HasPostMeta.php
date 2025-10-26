@@ -22,8 +22,6 @@ class HasPostMeta extends Relation
      */
     public function applyFilterByParents(array $models)
     {
-        dd( "applyFilterByParents MetaPost relation" );
-
         $ids = [];
         foreach ($models as $model) {
             $ids[] = $model->getKey();
@@ -37,7 +35,9 @@ class HasPostMeta extends Relation
         foreach ($models as $model) {
             $model->setRelation(
                 $name,
-                array_filter( $results, fn($i) => $i->post_id == $model->getKey() )
+                array_values(
+                    array_filter( $results, fn($i) => $i->post_id == $model->getKey() )
+                )
             );
         }
 

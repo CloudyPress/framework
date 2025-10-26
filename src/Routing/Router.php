@@ -102,7 +102,7 @@ class Router
                     'methods' => $route->getMethods(),
                     'callback' => function(WP_REST_Request  $request) use ($route) {
                         header("Content-Type: text/html");
-                        $route->getAction( ...[...$request->get_params(), $request] );
+                        return $route->getAction( ...[...$request->get_params(), $request] );
                     }
                 ) );
             }

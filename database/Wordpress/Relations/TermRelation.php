@@ -53,9 +53,9 @@ class TermRelation extends Relation
         /** @var PostType $model */
         foreach ($models as $model) {
 
-            $data = array_filter( $terms, function($term) use ($model) {
+            $data = array_values( array_filter( $terms, function($term) use ($model) {
                 return $term->object_id == $model->{$model->getKeyName()};
-            });
+            }) );
 
             $model->setRelation( $name, $data );
         }

@@ -17,7 +17,7 @@ class Paginated implements \JsonSerializable
     public function toArray()
     {
         return [
-            'data' => $this->data,
+            'data' =>  $this->data,
             "pagination" => [
                 "current_page" => $this->currentPage,
                 "per_page" => $this->perPage,
@@ -25,6 +25,12 @@ class Paginated implements \JsonSerializable
             ]
         ];
     }
+
+    public function get(int $index)
+    {
+        return $this->data[$index];
+    }
+
     public function jsonSerialize()
     {
         return $this->toArray();

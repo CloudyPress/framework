@@ -33,6 +33,11 @@ abstract class Relation implements Queryable
         throw new \BadMethodCallException("Method {$method} does not exist on Relation or QueryBuilder.");
     }
 
+    public function getRelated(): string
+    {
+        return $this->parent::class;
+    }
+
     abstract public function initRelation(array $models, string $relation): array;
 
 

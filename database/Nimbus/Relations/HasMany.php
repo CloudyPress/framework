@@ -53,9 +53,9 @@ class HasMany extends Relation
         /** @var Model $model */
         foreach ($models as $model) {
             /** @var Model $value */
-            $data = array_filter( $results, function ( $value ) use ( $model, $name ) {
+            $data = array_values( array_filter( $results, function ( $value ) use ( $model, $name ) {
                 return $model->{$this->localKey} == $value->{$this->getCleanForeignKey()};
-            } );
+            } ) );
 
             $model->setRelation( $name, $data );
         }

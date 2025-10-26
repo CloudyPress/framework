@@ -2,10 +2,12 @@
 
 namespace CloudyPress\Database\Nimbus;
 
+use CloudyPress\Database\Nimbus\Relations\Relation;
+
 class WithRelation
 {
 
-    protected array $nested = [];
+    public array $nested = [];
 
     protected array $constraints = [];
 
@@ -41,6 +43,15 @@ class WithRelation
         }
 
         $this->nested[$parent]->addNested( implode('.', $parts), $callback );
+    }
+
+    public function getConstraints(): \Closure
+    {
+        return static::combineClosures(
+            count($this->constraints) > 0
+                ? $this->constraints
+                : [static function () {}]
+        );
     }
 
     /**
@@ -80,5 +91,46 @@ class WithRelation
 
             return $builder;
         };
+    }
+
+    public static function eagerLoadRelation(Model $parent, array &$models, string $name, self $withRelation): array
+    {
+        if (!method_exists($parent, $name)) {
+            throw new \RuntimeException("Relation {$name} does not exist on model");
+        }
+
+        /** @var Relation $relation */
+        $relation = $parent->{$name}();
+
+        $relation->applyFilterByParents($models);
+
+        $constraint = $withRelation->getConstraints();
+        $constraint($relation);
+
+        $hydrated = $relation->matchWithParents(
+            $relation->initRelation( $models, $name),
+            $relation->fetchRelatedModels(),
+            $name
+        );
+
+        if ( count($hydrated) == 0 )
+            return $hydrated;
+
+        $subRelationModels = array_merge(
+            ...array_map(
+                fn(Model $model) => (array) $model->{$name},
+                $hydrated
+            )
+        );
+
+        if ( empty($subRelationModels) )
+            return $hydrated;
+
+        foreach ($withRelation->nested as $childName => $subWithRelation) {
+            //Load sub relations
+            static::eagerLoadRelation($subRelationModels[0], $subRelationModels, $childName, $subWithRelation);
+        }
+
+        return $hydrated;
     }
 }

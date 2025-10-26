@@ -27,11 +27,10 @@ class Product extends PostType
         );
     }
 
-    public function variations()
+    public function metaToLoad(): array
     {
-        return (new WooProductVariationRelation(
-            ProductVariation::query(),
-            $this
-        ))->select(["ID","post_parent"]);
+        return [
+            ...$this->wooMeta
+        ];
     }
 }

@@ -5,6 +5,7 @@ namespace CloudyPress\Database\Wordpress;
 use CloudyPress\Core\Support\Str;
 use CloudyPress\Database\Nimbus\Builder;
 use CloudyPress\Database\Nimbus\Model;
+use CloudyPress\Database\Nimbus\QueryBuilder;
 use CloudyPress\Database\Wordpress\Models\WpPostMeta;
 use CloudyPress\Database\Wordpress\Relations\HasPostMeta;
 
@@ -14,6 +15,7 @@ use CloudyPress\Database\Wordpress\Relations\HasPostMeta;
  * @method static Builder trash()
  * @method static Builder pending()
  * @method static Builder future()
+ * @method static Builder withMeta()
  * @method static Builder whereStatus(string|array $status)
  */
 abstract class PostType extends Model
@@ -22,6 +24,21 @@ abstract class PostType extends Model
 
     protected string $keyName = "ID";
     protected string $tableName = "posts";
+
+
+    public function metaToLoad(): array
+    {
+        return [];
+    }
+
+    public function scopeWithMeta( Builder $query ): Builder
+    {
+        if ( empty($this->metaToLoad()) ) return $query;
+
+        return $query->with([ "meta" => function ($query) {
+            $query->whereIn("meta_key", $this->metaToLoad());
+        }]);
+    }
 
     public function newQuery(): Builder
     {

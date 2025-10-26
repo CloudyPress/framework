@@ -16,7 +16,7 @@ abstract class Model implements \JsonSerializable
 
     protected string $keyName = "id";
 
-    protected array $attributes;
+    protected array $attributes = [];
 
     protected array $hidden = [];
 
@@ -67,6 +67,8 @@ abstract class Model implements \JsonSerializable
 
     public static function __callStatic(string $name, array $arguments)
     {
+
+
         // If calling static from query
         if ( method_exists( static::$builder, $name) ) {
             return static::query()->{$name}(...$arguments);
@@ -105,13 +107,12 @@ abstract class Model implements \JsonSerializable
 
     public function toArray(): array
     {
-
         // array_diff_key is faster because it works directly on keys
 
         return [
             ...array_diff_key(
                 $this->attributes,
-                array_flip($this->hidden) // turn hidden list into keys for quick lookup
+                array_flip($this->hidden ?? []) // turn hidden list into keys for quick lookup
             ),
             "relations" => $this->relations,
         ];
