@@ -2,6 +2,7 @@
 
 namespace CloudyPress\Database\Wordpress;
 
+use CloudyPress\Core\Attribute;
 use CloudyPress\Core\Support\Str;
 use CloudyPress\Database\Nimbus\Builder;
 use CloudyPress\Database\Nimbus\Model;
@@ -24,7 +25,6 @@ abstract class PostType extends Model
 
     protected string $keyName = "ID";
     protected string $tableName = "posts";
-
 
     public function metaToLoad(): array
     {

@@ -2,6 +2,7 @@
 
 namespace CloudyPress\Database\Nimbus;
 
+use CloudyPress\Core\Attribute;
 use CloudyPress\Core\Support\Str;
 use CloudyPress\Database\Nimbus\Relations\HasMany;
 
@@ -20,7 +21,10 @@ abstract class Model implements \JsonSerializable
 
     protected array $hidden = [];
 
-    protected static string $builder = Builder::class;
+
+    //-------------------------------------------
+    // MAGIC METHODS
+    //-------------------------------------------
 
     public function __construct( \WP_Post|array $attr = [] )
     {
@@ -31,7 +35,67 @@ abstract class Model implements \JsonSerializable
         }
     }
 
+    public static function __callStatic(string $name, array $arguments)
+    {
 
+
+        // If calling static from query
+        if ( method_exists( static::$builder, $name) ) {
+            return static::query()->{$name}(...$arguments);
+        }
+
+        $model = new static();
+
+        $query = $model->callScope($name, $arguments);
+
+        if ( $query )
+            return $query;
+
+        return null;
+    }
+
+    public function __get(string $name)
+    {
+        if ( isset($this->attributes[$name]) )
+        {
+            return $this->attributes[$name];
+        }
+
+        if ( isset( $this->relations[$name] ) )
+        {
+            return $this->relations[$name];
+        }
+
+        if ( $this->mappingExists($name) )
+            return $this->mappingGet($name)->getValue();
+
+        return null;
+    }
+
+    //-------------------------------------------
+    // MAPPING
+    //-------------------------------------------
+
+    protected function mappings(): array
+    {
+        return [];
+    }
+
+    protected function mappingExists(string $name): bool
+    {
+        return isset( $this->mappings()[$name] );
+    }
+
+    protected function mappingGet(string $name): Attribute
+    {
+        return $this->mappings()[$name];
+    }
+
+    //-------------------------------------------
+    // QUERY
+    //-------------------------------------------
+
+    protected static string $builder = Builder::class;
 
     public function getTableName(): string
     {
@@ -53,7 +117,6 @@ abstract class Model implements \JsonSerializable
         return $this->{$this->getKeyName()};
     }
 
-
     public function newQuery()
     {
         return $this->newNimbusBuilder();
@@ -63,25 +126,6 @@ abstract class Model implements \JsonSerializable
     {
         return (new static::$builder)
             ->setModel($this);
-    }
-
-    public static function __callStatic(string $name, array $arguments)
-    {
-
-
-        // If calling static from query
-        if ( method_exists( static::$builder, $name) ) {
-            return static::query()->{$name}(...$arguments);
-        }
-
-        $model = new static();
-
-        $query = $model->callScope($name, $arguments);
-
-        if ( $query )
-            return $query;
-
-        return null;
     }
 
 
@@ -107,12 +151,39 @@ abstract class Model implements \JsonSerializable
 
     public function toArray(): array
     {
-        // array_diff_key is faster because it works directly on keys
+        // Remove hidden attributes from the model's raw attributes.
+        // - array_diff_key is efficient because it compares keys directly.
+        // - array_flip turns the $hidden list into a hash map for O(1) lookups.
+        $attrs = array_diff_key(
+            $this->attributes,
+            array_flip($this->hidden ?? [])
+        );
 
+        // Track which attributes were transformed by mappings.
+        $mappings = [];
+
+        foreach ( $attrs as $key => $value )
+        {
+            if ( $this->mappingExists($key) )
+            {
+                // Replace the raw value with the mapped/transformed value.
+                $attrs  [$key] = $this->mappingGet($key);
+                // Record that this mapping was applied.
+                $mappings[$key] = $key;
+            }
+
+        }
+
+        // Return the final array representation of the model:
+        // - Spread operator merges the transformed attributes.
+        // - "_mappings" shows which declared mappings were NOT applied
+        //   (difference between all mappings() and those actually used).
+        // - "relations" includes any loaded relationships.
         return [
-            ...array_diff_key(
-                $this->attributes,
-                array_flip($this->hidden ?? []) // turn hidden list into keys for quick lookup
+            ...$attrs,
+            "_mappings" => array_diff(
+                $this->mappings(),
+                $mappings
             ),
             "relations" => $this->relations,
         ];
@@ -166,20 +237,7 @@ abstract class Model implements \JsonSerializable
         return new HasMany($query, $parent, $foreignKey, $localKey);
     }
 
-    public function __get(string $name)
-    {
-        if ( isset($this->attributes[$name]) )
-        {
-            return $this->attributes[$name];
-        }
 
-        if ( isset( $this->relations[$name] ) )
-        {
-            return $this->relations[$name];
-        }
-
-        return null;
-    }
 
     public function callScope(string $name, mixed $scopeArgs, $query = null): Builder|null
     {

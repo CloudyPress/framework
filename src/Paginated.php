@@ -2,7 +2,10 @@
 
 namespace CloudyPress\Core;
 
-class Paginated implements \JsonSerializable
+use IteratorAggregate;
+use Traversable;
+
+class Paginated implements \JsonSerializable, IteratorAggregate
 {
 
     public function __construct(
@@ -34,5 +37,10 @@ class Paginated implements \JsonSerializable
     public function jsonSerialize()
     {
         return $this->toArray();
+    }
+
+    public function getIterator()
+    {
+        return new \ArrayIterator($this->data);
     }
 }
