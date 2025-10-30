@@ -6,6 +6,9 @@ use CloudyPress\Database\Nimbus\Builder;
 use CloudyPress\Database\Nimbus\Model;
 use CloudyPress\Database\Query\Queryable;
 
+/**
+ * @method static Builder where( string $column, string $operator, string|null $value = null )
+ */
 abstract class Relation implements Queryable
 {
 
@@ -30,7 +33,15 @@ abstract class Relation implements Queryable
             return $this;
         }
 
+        if ($this->callScope($method, $parameters))
+            return $this;
+
         throw new \BadMethodCallException("Method {$method} does not exist on Relation or QueryBuilder.");
+    }
+
+    protected function callScope($method, $parameters): Builder|null
+    {
+        return $this->parent->callScope($method, $parameters, $this->query);
     }
 
     public function getRelated(): string

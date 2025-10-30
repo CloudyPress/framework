@@ -16,6 +16,7 @@ class QueryBuilder implements Queryable
 {
     public array $wheres = [];
 
+    public string $table;
     public string $from;
 
     /**
@@ -67,6 +68,7 @@ class QueryBuilder implements Queryable
 
     public function from(string $table, string $as = null): self
     {
+        $this->table = $table;
         $this->from = $as ? "{$table} as {$as}" : $table;
 
         return $this;
@@ -111,9 +113,22 @@ class QueryBuilder implements Queryable
         return $this;
     }
 
+    /**
+     * @param array|string $columns
+     * @param bool $withParent In case throw error cuz need to add "$table.column_name"
+     * @return $this
+     */
     public function select(array|string $columns, bool $withParent = false): QueryBuilder
     {
-        $this->columns = is_array($columns) ? $columns : func_get_args();
+
+        $columns = is_array($columns) ? $columns : func_get_args();
+
+        //In case throw error cuz need to add "table."
+        if ($withParent) {
+            $columns = array_map( fn($i) => "{$this->table}.{$i}", $columns );
+        }
+
+        $this->columns = $columns;
 
         return $this;
     }

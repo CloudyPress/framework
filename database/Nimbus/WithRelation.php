@@ -113,6 +113,10 @@ class WithRelation
             $name
         );
 
+
+//        $relation->withs
+//        $withRelation->addNested(  );
+
         if ( count($hydrated) == 0 )
             return $hydrated;
 

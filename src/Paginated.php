@@ -21,11 +21,7 @@ class Paginated implements \JsonSerializable, IteratorAggregate
     {
         return [
             'data' =>  $this->data,
-            "pagination" => [
-                "current_page" => $this->currentPage,
-                "per_page" => $this->perPage,
-                "total" => $this->total
-            ]
+            "pagination" => $this->getPagination(),
         ];
     }
 
@@ -34,6 +30,14 @@ class Paginated implements \JsonSerializable, IteratorAggregate
         return $this->data[$index];
     }
 
+    public function getPagination()
+    {
+        return [
+            "currentPage" => $this->currentPage,
+            "perPage" => $this->perPage,
+            "total" => $this->total
+        ];
+    }
     public function jsonSerialize()
     {
         return $this->toArray();

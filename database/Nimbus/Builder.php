@@ -22,6 +22,11 @@ class Builder implements Queryable
         $this->query = new QueryBuilder();
     }
 
+    public function __call(string $name, array $arguments)
+    {
+        return $this->model->callScope($name, $arguments, $this);
+    }
+
     // ---------------------------------------------------------------------
     // ⚙️ Model Setup
     // ---------------------------------------------------------------------
@@ -44,9 +49,9 @@ class Builder implements Queryable
         return $this->model->getTableName();
     }
 
-    public function select(array|string $columns = "*")
+    public function select(array|string $columns = "*", bool $withParent = false): self
     {
-        $this->query->select($columns);
+        $this->query->select($columns, $withParent);
 
         return $this;
     }
