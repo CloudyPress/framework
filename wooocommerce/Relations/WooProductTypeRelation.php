@@ -5,6 +5,7 @@ namespace CloudyPress\Woocommerce\Relations;
 use CloudyPress\Database\Nimbus\Builder;
 use CloudyPress\Database\Nimbus\Model;
 use CloudyPress\Database\Nimbus\Relations\Relation;
+use CloudyPress\Woocommerce\ProductType;
 
 class WooProductTypeRelation extends Relation
 {
@@ -63,7 +64,7 @@ class WooProductTypeRelation extends Relation
         foreach ($models as $model) {
             $term = array_find($results, fn($i) => $i->object_id == $model->{$this->parent->getKeyName()});
 
-            $model->setRelation($name, $term->slug ?? "simple");
+            $model->setRelation($name, ProductType::from($term->slug) ?? ProductType::SIMPLE);
         }
 
         return $models;

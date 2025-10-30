@@ -2,6 +2,7 @@
 
 namespace CloudyPress\Database\Wordpress\Relations;
 
+use CloudyPress\Core\Wordpress\MetaTermList;
 use CloudyPress\Database\Nimbus\Model;
 use CloudyPress\Database\Nimbus\Relations\Relation;
 
@@ -35,9 +36,7 @@ class HasPostMeta extends Relation
         foreach ($models as $model) {
             $model->setRelation(
                 $name,
-                array_values(
-                    array_filter( $results, fn($i) => $i->post_id == $model->getKey() )
-                )
+                new MetaTermList( array_filter( $results, fn($i) => $i->post_id == $model->getKey() ) )
             );
         }
 
