@@ -56,9 +56,8 @@ class Route
      * @return mixed
      * @throws Exception
      */
-    public function getAction(...$args)
+    public function getAction($request, ...$args)
     {
-
         if ( is_string($this->action) )
         {
             [ $className, $methodName ] = explode("@", $this->action);
@@ -67,16 +66,35 @@ class Route
                 throw new Exception("Method '{$methodName}' does not exist on {$className}.");
 
             $action = new $className();
+            $method = new \ReflectionMethod($action, $methodName);
 
-            //TODO, pass args
-
-            return $action->{$methodName}(...$args);
+            return $action->{$methodName}(...$this->parseParameters( $method->getParameters(), $args, $request) );
         }
 
+        $method = new \ReflectionMethod($this->action);
         // Closure case
-        return call_user_func($this->action, ...$args);
+        return call_user_func($this->action, ...$this->parseParameters( $method->getParameters(), $args, $request) );
     }
 
+    protected function parseParameters(array $parameters, array $args, $request): array
+    {
+        $filtered = [];
+        /** @var \ReflectionParameter $param */
+        foreach ($parameters as $param)
+        {
+            if ( in_array( $param->getName(), array_keys($args) ) )
+            {
+                $filtered[$param->getPosition()] = $args[$param->getName()];
+            }else if ( $param->hasType() && $param->getType()->getName() == \WP_REST_Request::class )
+            {
+                $filtered[$param->getPosition()] = $request;
+            }else{
+                $filtered[$param->getPosition()] = null;
+            }
+        }
+
+        return $filtered;
+    }
     /**
      * Parse action content into content that this class can understand
      * From Examples:
