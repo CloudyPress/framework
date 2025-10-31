@@ -68,7 +68,14 @@ abstract class Model implements \JsonSerializable
         }
 
         if ( $this->mappingExists($name) )
-            return $this->mappingGet($name)->getValue();
+        {
+            $map = $this->mappingGet($name);
+
+            if ( $map instanceof Attribute )
+                return $map->getValue();
+
+            return $map;
+        }
 
         return null;
     }
@@ -87,7 +94,7 @@ abstract class Model implements \JsonSerializable
         return isset( $this->mappings()[$name] );
     }
 
-    protected function mappingGet(string $name): Attribute
+    protected function mappingGet(string $name): mixed
     {
         return $this->mappings()[$name];
     }

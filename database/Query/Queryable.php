@@ -11,4 +11,6 @@ interface Queryable
 
 
     public function getBindings(): array;
+
+    public function toSqlCompiled(): string;
 }

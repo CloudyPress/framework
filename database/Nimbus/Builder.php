@@ -44,6 +44,14 @@ class Builder implements Queryable
         return $this;
     }
 
+    /**
+     * @return Model
+     */
+    public function getModel(): Model
+    {
+        return $this->model;
+    }
+
     public function getTableName(): string
     {
         return $this->model->getTableName();
@@ -63,6 +71,11 @@ class Builder implements Queryable
     public function toSql(): string
     {
         return $this->query->toSql();
+    }
+
+    public function toSqlCompiled(): string
+    {
+        return $this->query->toSqlCompiled();
     }
 
     public function getBindings(): array
@@ -96,6 +109,16 @@ class Builder implements Queryable
         $data = $this->get();
 
         return $data[0] ?? null;
+    }
+
+    public function firstOrFail( string|array $column = '*' ): Model|null
+    {
+        $data = $this->first( $column );
+
+        if ( empty( $data ) )
+            throw new \Exception("Model doesn't exist");
+
+        return $data;
     }
 
     public function find( string|int $key, string|array $columns = '*' ): Model|null
@@ -236,6 +259,49 @@ class Builder implements Queryable
             $relation->fetchRelatedModels(),
             $name
         );
+    }
+
+    public function whereHas(string|Relation $relation, \Closure $callback): Builder
+    {
+        if (is_string($relation)) {
+            $relation = $this->model->{$relation}();
+        }
+
+        // Retrieve details from the relation.
+        // Ensure your Relation class exposes these methods so you can determine:
+        // - Related table name
+        // - Local key from the current table (usually primary key)
+        // - Foreign key stored in the related table (the column that links back to the main table)
+        $relatedTable = $relation->getRelatedTable(); // e.g., "meta_table"
+        $localKey = $relation->getLocalKey();     // e.g., "id" on the main table
+        $foreignKey = $relation->getForeignKey();    // e.g., "model_id" in the meta table
+
+        $this->join(
+            $relatedTable,
+            "{$localKey}",
+            "=",
+            "{$foreignKey}"
+        );
+
+        // Create an instance of the mini builder for the relationship.
+        // Execute the callback so the caller can add conditions.
+        $callback($relation);
+
+        // Merge "where" conditions from the mini builder.
+        foreach ($relation->getQuery()->query->wheres as $condition) {
+            // $expression, $column, $operator, $value, $boolean
+            extract( $condition );
+
+            // Prefix unqualified columns with the related table name.
+            if (!str_contains($column, ".")) {
+                $column = "{$relatedTable}.{$column}";
+            }
+            // Use the main builder's where (which stores conditions in a uniform format)
+            $this->query->where($column, $operator, $value, $boolean);
+        }
+
+
+        return $this;
     }
 
     // ---------------------------------------------------------------------

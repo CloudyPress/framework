@@ -9,6 +9,11 @@ use CloudyPress\Database\Nimbus\Relations\Relation;
 class HasPostMeta extends Relation
 {
 
+    public function getForeignKey(): string
+    {
+        return "{$this->query->getTableName()}.post_id";
+    }
+
     public function initRelation(array $models, string $relation): array
     {
         /** @var Model $model */

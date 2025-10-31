@@ -37,14 +37,14 @@ abstract class Stratus implements \JsonSerializable
             $list[] = new static( $item );
         }
 
-        $pagination = [];
+        $pagination = new StratusGroup($list);
 
         if ( $data instanceof Paginated )
         {
-            $pagination = $data->getPagination();
+            $pagination->withPagination( $data->getPagination()["currentPage"], $data->getPagination()["perPage"] );
         }
 
-        return new StratusGroup( $list, ...$pagination );
+        return  $pagination;
     }
 
 }

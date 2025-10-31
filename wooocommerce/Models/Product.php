@@ -2,6 +2,7 @@
 
 namespace CloudyPress\Woocommerce\Models;
 
+use CloudyPress\Core\Wordpress\HasThumbnail;
 use CloudyPress\Database\Nimbus\Builder;
 use CloudyPress\Database\Wordpress\Models\TermRelationship;
 use CloudyPress\Database\Wordpress\Models\WpPostMeta;
@@ -17,7 +18,7 @@ use framework\database\Wordpress\Relations\HasPostMeta;
  */
 class Product extends PostType
 {
-    use HasProductContent;
+    use HasProductContent, HasThumbnail;
 
     protected string $postType = 'product';
 

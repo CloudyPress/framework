@@ -223,12 +223,17 @@ class QueryBuilder implements Queryable
 
     public function get()
     {
-        return WPDB::run( $this->grammar->compile($this), $this->grammar->getParams() );;
+        return WPDB::run( $this->grammar->compile($this), $this->grammar->getParams() );
     }
 
     public function toSQL(): string
     {
         return $this->grammar->compile($this);
+    }
+
+    public function toSqlCompiled(): string
+    {
+        return WPDB::sqlRaw( $this->grammar->compile($this), $this->grammar->getParams() );
     }
 
     public function getBindings(): array

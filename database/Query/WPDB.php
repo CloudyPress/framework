@@ -5,7 +5,8 @@ use CloudyPress\Database\Query\DBDriver;
 
 class WPDB implements DBDriver
 {
-    public static function run(string $sql, array $params = []): array
+
+    public static function prepare( string $sql, array $params = [] )
     {
         global $wpdb;
 
@@ -56,7 +57,13 @@ class WPDB implements DBDriver
         );
 
         // Use wpdb->prepare and run the prepared SQL
-        $prepared = $wpdb->prepare($sqlWithPlaceholders, ...$bindings);
+        return $wpdb->prepare($sqlWithPlaceholders, ...$bindings);
+    }
+    public static function run(string $sql, array $params = []): array
+    {
+        global $wpdb;
+
+        $prepared = static::prepare($sql, $params);
 
         if ($prepared === null) {
             throw new \RuntimeException('wpdb->prepare returned null; check placeholders vs bindings.');
@@ -64,5 +71,11 @@ class WPDB implements DBDriver
 
         $rows = $wpdb->get_results($prepared, ARRAY_A);
         return $rows ?: [];
+    }
+
+
+    public static function sqlRaw(string $sql, array $params = [])
+    {
+        return static::prepare($sql, $params);
     }
 }

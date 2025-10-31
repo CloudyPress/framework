@@ -44,9 +44,33 @@ abstract class Relation implements Queryable
         return $this->parent->callScope($method, $parameters, $this->query);
     }
 
+    /**
+     * @return Builder
+     */
+    public function getQuery(): Builder
+    {
+        return $this->query;
+    }
+
     public function getRelated(): string
     {
         return $this->parent::class;
+    }
+
+    public function getRelatedTable()
+    {
+        return $this->query->getTableName();
+    }
+
+    public function getLocalKey(): string
+    {
+        return $this->parent->getTableName().".".$this->parent->getKeyName();
+    }
+
+
+    public function getForeignKey(): string
+    {
+        return $this->query->getTableName().".".$this->query->getModel()->getKeyName();
     }
 
     abstract public function initRelation(array $models, string $relation): array;
@@ -89,5 +113,10 @@ abstract class Relation implements Queryable
     public function getBindings(): array
     {
         return $this->query->getBindings();
+    }
+
+    public function toSqlCompiled(): string
+    {
+        return $this->query->toSqlCompiled();
     }
 }
