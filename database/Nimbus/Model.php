@@ -38,8 +38,6 @@ abstract class Model implements \JsonSerializable
 
     public static function __callStatic(string $name, array $arguments)
     {
-
-
         // If calling static from query
         if ( method_exists( static::$builder, $name) ) {
             return static::query()->{$name}(...$arguments);
@@ -96,7 +94,12 @@ abstract class Model implements \JsonSerializable
 
     protected function mappingGet(string $name): mixed
     {
-        return $this->mappings()[$name];
+        $map = $this->mappings()[$name];
+
+        if ( $map instanceof \BackedEnum)
+            $map = $map::from($name);
+
+        return $map;
     }
 
     //-------------------------------------------
@@ -129,7 +132,7 @@ abstract class Model implements \JsonSerializable
         return $this->{$this->getKeyName()};
     }
 
-    public function newQuery()
+    public function newQuery(): Builder
     {
         return $this->newNimbusBuilder();
     }

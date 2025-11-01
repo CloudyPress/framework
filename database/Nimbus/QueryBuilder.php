@@ -38,6 +38,14 @@ class QueryBuilder implements Queryable
      * @var array|null
      */
     public array|null $aggregate = null;
+    public array $operators = [
+        '=', '<', '>', '<=', '>=', '<>', '!=', '<=>',
+        'like', 'like binary', 'not like', 'ilike',
+        '&', '|', '^', '<<', '>>', '&~', 'is', 'is not',
+        'rlike', 'not rlike', 'regexp', 'not regexp',
+        '~', '~*', '!~', '!~*', 'similar to',
+        'not similar to', 'not ilike', '~~*', '!~~*',
+    ];
 
     public function __construct(
          Grammar|null $grammar = null
@@ -147,16 +155,10 @@ class QueryBuilder implements Queryable
     }
     public function where( string $column, string $operator = null, string $value = null, string $boolean = 'AND' )
     {
-
-        if ( is_null($value) )
-        {
-            $value = $operator;
-            $operator = '=';
-        }
-
         [$value, $operator] = $this->prepareValueAndOperator(
             $value, $operator, func_num_args() === 2
         );
+
 
         $type = "Expression";
 
@@ -194,7 +196,7 @@ class QueryBuilder implements Queryable
     }
 
 
-    protected function prepareValueAndOperator( $value, $operator, bool $useDefault)
+    public function prepareValueAndOperator( $value, $operator, bool $useDefault)
     {
         if ( $useDefault )
         {

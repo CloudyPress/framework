@@ -2,6 +2,7 @@
 
 namespace CloudyPress\Database\Nimbus;
 
+use Closure;
 use CloudyPress\Core\Paginated;
 use CloudyPress\Database\Nimbus\Relations\Relation;
 use CloudyPress\Database\Query\Queryable;
@@ -148,9 +149,14 @@ class Builder implements Queryable
     // 🔍 Conditions
     // ---------------------------------------------------------------------
 
-    public function where( string $column, string $operator, string|null $value = null ): Builder
+    public function where( string $column, string $operator, string|null $value = null, string $boolean = 'and'): Builder
     {
-        $this->query->where( $column, $operator, $value );
+        if ( $column instanceof Closure )
+        {
+
+        }else{
+            $this->query->where( ...func_get_args() );
+        }
 
         return $this;
     }
@@ -168,6 +174,16 @@ class Builder implements Queryable
         return $this;
     }
 
+    public function orWhere( string $column, string $operator, string|null $value = null )
+    {
+        [$value, $operator] = $this->query->prepareValueAndOperator(
+            $value, $operator, func_num_args() === 2
+        );
+
+        return $this->where( $column, $operator, $value, "OR");
+    }
+
+
     // ---------------------------------------------------------------------
     // 🔍 Relations
     // ---------------------------------------------------------------------
@@ -178,7 +194,6 @@ class Builder implements Queryable
 
     public function with( array|string $relations )
     {
-
         $this->eagerLoad = array_merge($this->eagerLoad, $this->parseWithRelationships(
             is_string($relations) ? func_get_args() : $relations
         ) );
@@ -232,7 +247,6 @@ class Builder implements Queryable
         //load all top-level models
         foreach ($this->eagerLoad as $name => $relation) {
             // Load relation from top level to down
-
             $models = WithRelation::eagerLoadRelation($this->model, $models, $name, $relation);
         }
 

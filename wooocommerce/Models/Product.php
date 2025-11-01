@@ -32,6 +32,13 @@ class Product extends PostType
         );
     }
 
+    protected function mappings(): array
+    {
+        return [
+            "type" => ProductType::class,
+        ];
+    }
+
     public function metaToLoad(): array
     {
         return [

@@ -23,7 +23,7 @@ class MetaTermList implements \JsonSerializable
 
     public function getByKey($name)
     {
-        return $this->terms[$name] ?? null;
+        return $this->terms[$name];
     }
 
     public function toArray(): array
