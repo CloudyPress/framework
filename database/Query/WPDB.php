@@ -12,8 +12,8 @@ class WPDB implements DBDriver
 
         // Find named placeholders like :name
         if (!preg_match_all('/:([a-zA-Z_]\w*)/', $sql, $matches)) {
-            // no named params -> run directly (but still sanitize array result)
-            return $wpdb->get_results($sql, ARRAY_A) ?: [];
+            // no named params -> just return the raw SQL
+            return $sql;
         }
 
         $names = $matches[1]; // ordered appearance of names in SQL
@@ -63,6 +63,7 @@ class WPDB implements DBDriver
     {
         global $wpdb;
 
+
         $prepared = static::prepare($sql, $params);
 
         if ($prepared === null) {
@@ -70,6 +71,7 @@ class WPDB implements DBDriver
         }
 
         $rows = $wpdb->get_results($prepared, ARRAY_A);
+
         return $rows ?: [];
     }
 

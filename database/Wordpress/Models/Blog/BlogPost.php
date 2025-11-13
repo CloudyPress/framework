@@ -2,12 +2,13 @@
 
 namespace CloudyPress\Database\Wordpress\Models\Blog;
 
+use CloudyPress\Core\Wordpress\HasThumbnail;
 use CloudyPress\Database\Wordpress\PostType;
 use CloudyPress\Database\Wordpress\Relations\HasTerms;
 
 class BlogPost extends PostType
 {
-    use HasTerms;
+    use HasTerms, HasThumbnail;
 
     protected string $postType = "post";
 
@@ -15,4 +16,5 @@ class BlogPost extends PostType
     {
         return $this->hasTerms(["category"]);
     }
+
 }

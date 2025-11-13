@@ -84,6 +84,9 @@ class Builder implements Queryable
         return $this->query->getBindings();
     }
 
+    /**
+     * @return Model[]
+     */
     public function get(): array
     {
         $modelClass = get_class($this->model);
@@ -125,6 +128,16 @@ class Builder implements Queryable
     public function find( string|int $key, string|array $columns = '*' ): Model|null
     {
         return $this->whereKey($key)->first($columns);
+    }
+
+    public function findOrFail( string|int $key, string|array $columns = '*' ): Model
+    {
+        $model = $this->find( $key, $columns );
+
+        if ( empty( $model ) )
+            throw new \Exception("Model doesn't exist", 404);
+
+        return $model;
     }
 
     public function paginate(int $page = 1, int $perPage = 15, array|string $columns = '*')
@@ -300,6 +313,7 @@ class Builder implements Queryable
         // Create an instance of the mini builder for the relationship.
         // Execute the callback so the caller can add conditions.
         $callback($relation);
+
 
         // Merge "where" conditions from the mini builder.
         foreach ($relation->getQuery()->query->wheres as $condition) {

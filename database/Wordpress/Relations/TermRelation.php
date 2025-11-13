@@ -3,15 +3,15 @@
 namespace CloudyPress\Database\Wordpress\Relations;
 
 use CloudyPress\Database\Nimbus\Builder;
+use CloudyPress\Database\Nimbus\Model;
 use CloudyPress\Database\Nimbus\Relations\Relation;
-use CloudyPress\Database\Wordpress\PostType;
 
 class TermRelation extends Relation
 {
 
     public function __construct(
         Builder $query,
-        PostType $parent,
+        Model $parent,
         protected array $taxonomy,
     )
     {
@@ -42,7 +42,7 @@ class TermRelation extends Relation
             return [];
         }
 
-        $terms = wp_get_object_terms( array_map( fn(PostType $i) => $i->{$i->getKeyName()}, $models), $this->taxonomy, [
+        $terms = wp_get_object_terms( array_map( fn(Model $i) => $i->{$i->getKeyName()}, $models), $this->taxonomy, [
             'fields' => 'all_with_object_id'
         ] );
 
@@ -50,7 +50,7 @@ class TermRelation extends Relation
             throw new \Exception( $terms->get_error_message());
 
 
-        /** @var PostType $model */
+        /** @var Model $model */
         foreach ($models as $model) {
 
             $data = array_values( array_filter( $terms, function($term) use ($model) {

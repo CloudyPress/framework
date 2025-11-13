@@ -6,6 +6,9 @@ use CloudyPress\Database\Nimbus\Relations\OneThroughRelation;
 use CloudyPress\Database\Wordpress\Models\WpAttachment;
 use CloudyPress\Database\Wordpress\Models\WpPostMeta;
 
+/**
+ * @property-read WpAttachment thumbnail
+ */
 trait HasThumbnail
 {
 

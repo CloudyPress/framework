@@ -22,6 +22,14 @@ abstract class Model implements \JsonSerializable
 
     protected array $hidden = [];
 
+    /**
+     * @return array
+     */
+    public function getAttributes(): array
+    {
+        return $this->attributes;
+    }
+
 
     //-------------------------------------------
     // MAGIC METHODS
@@ -55,11 +63,6 @@ abstract class Model implements \JsonSerializable
 
     public function __get(string $name)
     {
-        if ( isset($this->attributes[$name]) )
-        {
-            return $this->attributes[$name];
-        }
-
         if ( isset( $this->relations[$name] ) )
         {
             return $this->relations[$name];
@@ -70,9 +73,14 @@ abstract class Model implements \JsonSerializable
             $map = $this->mappingGet($name);
 
             if ( $map instanceof Attribute )
-                return $map->getValue();
+                return $map->getValue( $this->attributes[$name] ?? null );
 
             return $map;
+        }
+
+        if ( isset($this->attributes[$name]) )
+        {
+            return $this->attributes[$name];
         }
 
         return null;
@@ -179,16 +187,24 @@ abstract class Model implements \JsonSerializable
 
         foreach ( $attrs as $key => $value )
         {
-            if ( $this->mappingExists($key) )
-            {
+            if ( $this->mappingExists($key) ) {
                 // Replace the raw value with the mapped/transformed value.
-                $attrs  [$key] = $this->mappingGet($key);
+                $getted = $this->mappingGet($key);
+
+                if ( $getted instanceof Attribute )
+                {
+                    $attrs  [$key] = $getted->getValue();
+                }else{
+                    $attrs[$key] = $getted;
+                }
+
                 // Record that this mapping was applied.
                 $mappings[$key] = $key;
             }
 
         }
 
+        // TODO: Parse all mappings first and then after return as array, this was throwing cannot convert Attribute to string
         // Return the final array representation of the model:
         // - Spread operator merges the transformed attributes.
         // - "_mappings" shows which declared mappings were NOT applied
@@ -196,9 +212,19 @@ abstract class Model implements \JsonSerializable
         // - "relations" includes any loaded relationships.
         return [
             ...$attrs,
-            "_mappings" => array_diff(
-                $this->mappings(),
-                $mappings
+            "_mappings" =>
+                array_diff(
+                    array_map(
+                        function($i){
+                            if ( $i instanceof Attribute )
+                                return $i->getValue();
+
+                            return $i;
+                        },
+                    $this->mappings()
+                    ),
+                    $mappings
+
             ),
             "relations" => $this->relations,
         ];

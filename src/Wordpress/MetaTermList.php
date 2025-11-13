@@ -2,9 +2,12 @@
 
 namespace CloudyPress\Core\Wordpress;
 
+use CloudyPress\Database\Wordpress\Models\WpPostMeta;
+
 class MetaTermList implements \JsonSerializable
 {
 
+    /** @var WpPostMeta[]  */
     protected array $terms = [];
 
     public function __construct(
@@ -21,9 +24,9 @@ class MetaTermList implements \JsonSerializable
         return $this->getByKey($name);
     }
 
-    public function getByKey($name)
+    public function getByKey($name): WpPostMeta|null
     {
-        return $this->terms[$name];
+        return $this->terms[$name] ?? null;
     }
 
     public function toArray(): array

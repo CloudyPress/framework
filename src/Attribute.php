@@ -21,9 +21,9 @@ class Attribute implements \JsonSerializable
     {
     }
 
-    public function getValue()
+    public function getValue(mixed $value = null)
     {
-        return call_user_func($this->get);
+        return call_user_func($this->get, $value);
     }
 
     public function jsonSerialize()

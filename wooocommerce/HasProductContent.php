@@ -8,6 +8,7 @@ use CloudyPress\Woocommerce\Models\ProductVariation;
 use CloudyPress\Woocommerce\Relations\WooProductVariationRelation;
 
 /**
+ * @property-read ProductVariation[] variations
  * @method static Builder withWooMeta(array $meta = null) Load specific meta for product
  * @method static Builder withWooMetaAndVariations(array $columns = ["*"], array|bool $meta = null) Load variations and meta in case need, set $meta = [] to avoid loading meta
  * @method static Builder withWooVariations(array $columns = ["*"], array|bool $meta = null) Load variations and meta in case need, set $meta = [] to avoid loading meta
